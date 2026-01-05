@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "flywheel-gear-dev": {
+      "command": "uv",
+      "args": ["run", "flywheel-gear-mcp"]
+    }
+  }
+}

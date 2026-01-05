@@ -1,0 +1,97 @@
+# Flywheel Gear Development MCP Server Configuration
+#
+# This file defines all documentation sources that will be fetched and cached
+# when the MCP server starts. You can easily add or remove URLs here.
+#
+# Each documentation source should specify:
+#   - tool_name: The name of the MCP tool (e.g., "get_fw_gear_docs")
+#   - display_name: Human-readable name shown in responses
+#   - urls: List of URLs to fetch (can combine multiple sources)
+#   - type: Content type - "html", "xml", "json", or "gitlab_repo"
+#   - strip_deprecated: Whether to remove deprecated sections (default: true)
+#   - filter_sections: (Optional) For XML/large docs, specific sections to extract
+
+documentation_sources:
+  - tool_name: get_fw_gear_docs
+    display_name: "fw-gear Library"
+    description: "Flywheel gear Python library for building gears"
+    urls:
+      - https://flywheel-io.gitlab.io/scientific-solutions/lib/fw-gear/0.3/fw_gear/reference/
+    type: html
+    strip_deprecated: true
+
+  - tool_name: get_fw_classification_docs
+    display_name: "fw-classification Library"
+    description: "Flywheel classification library for DICOM metadata"
+    urls:
+      - https://flywheel-io.gitlab.io/scientific-solutions/lib/fw-classification/
+    type: html
+    strip_deprecated: true
+
+  - tool_name: get_fw_file_docs
+    display_name: "fw-file Library"
+    description: "Flywheel file library for medical imaging file handling"
+    urls:
+      - https://gitlab.com/flywheel-io/tools/lib/fw-file
+      - https://docs.flywheel.io/Developer_Guides/toolkit/fw_file/#medical-imaging
+    type: gitlab_repo  # Special handling: fetch all .md files from repo
+    strip_deprecated: true
+
+  - tool_name: get_flywheel_api_docs
+    display_name: "Flywheel Python API"
+    description: "Flywheel platform Python SDK documentation"
+    urls:
+      - https://api-docs.flywheel.io/latest/tags/21.3.0/python/index.html
+    type: html
+    strip_deprecated: true
+
+  - tool_name: get_dicom_standard
+    display_name: "DICOM Standard"
+    description: "DICOM standard documentation (filtered to data dictionary and transfer syntaxes)"
+    urls:
+      - https://dicom.nema.org/medical/dicom/current/source/docbook/
+    type: xml
+    strip_deprecated: false
+    filter_sections:
+      - data_dictionary
+      - transfer_syntaxes
+
+  - tool_name: get_file_types_guide
+    display_name: "Flywheel File Types Guide"
+    description: "Guide to supported file types in Flywheel"
+    urls:
+      - https://docs.flywheel.io/user/upload/user_file_types_in_flywheel/
+    type: html
+    strip_deprecated: true
+
+  - tool_name: get_bids_guide
+    display_name: "BIDS in Flywheel Guide"
+    description: "Guide to using BIDS (Brain Imaging Data Structure) in Flywheel"
+    urls:
+      - https://docs.flywheel.io/Developer_Guides/bids/#introduction
+    type: html
+    strip_deprecated: true
+
+  - tool_name: get_batch_gears_guide
+    display_name: "Batch Gear Execution Guide"
+    description: "Guide to running gears as batch jobs"
+    urls:
+      - https://docs.flywheel.io/user/workflow/gear-based/user_running_gears_as_a_batch/#how-is-the-number-of-jobs-queued-determined
+    type: html
+    strip_deprecated: true
+
+  - tool_name: get_gear_specs
+    display_name: "Gear Specifications"
+    description: "Flywheel gear specification and essential components"
+    urls:
+      - https://docs.flywheel.io/Developer_Guides/gear/dev_gear_specifications/#essential-components
+    type: html
+    strip_deprecated: true
+
+  - tool_name: get_manifest_schema
+    display_name: "Gear Manifest JSON Schema"
+    description: "JSON schema for gear manifest.json files"
+    urls:
+      - https://gitlab.com/flywheel-io/public/gears/-/blob/master/spec/manifest.schema.json
+    type: json
+    strip_deprecated: false
