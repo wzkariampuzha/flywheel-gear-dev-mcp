@@ -1,35 +1,46 @@
 # Flywheel Gear Development MCP Server
 
-An MCP (Model Context Protocol) server that provides fresh Flywheel documentation for gear development. Designed for use with Claude Code CLI or possibly other LLMs (haven't tested them there yet).
+Give Claude expert knowledge of Flywheel gear development while you code.
 
-## Features
-- **Fresh documentation on startup**: Fetches latest docs every time the server starts
-- **10 curated documentation sources**: Flywheel gear libraries, APIs, DICOM standard, and guides that you can add/remove/edit in [config](config.yaml)
-- **Deprecation filtering**: Automatically removes deprecated content to keep LLMs focused on current APIs
+## The Problem
 
-## Installation
-### Prerequisites
-- [uv](https://github.com/astral-sh/uv) or pip (Python 3.13+)
+[Developing gears for Flywheel](https://docs.flywheel.io/Developer_Guides/gear/building_tutorial/) means wrestling with documentation scattered across 10+ sources—many deprecated, conflicting, or redundant. You're constantly switching between browser tabs, searching for the right API reference, and wondering if what you're reading is still current.
 
-### Install from source
+## The Solution
+
+This MCP (Model Context Protocol) server gives Claude Code direct access to all of the Flywheel and DICOM documentation on command. Now when you ask Claude "What's the correct way to write a DICOM secondary?", it can reference the actual current specs—no hallucination or without loading all of the DICOM standard docs into memory and clogging up your context.
+
+**What's MCP?** It's a protocol that lets Claude Code access external tools and data. This server runs locally on your machine (started and stopped by `claude` only in the directory that you are developing a Flywheel gear) and feeds fresh Flywheel docs to Claude on demand.
+
+**Who is this for?** Flywheel developers using [Claude Code CLI](https://claude.ai/download) to build gears.
+
+## Quick Start
 
 ```bash
-# Clone the repository
-
+# 1. Clone and install the MCP server
+git clone https://github.com/wzkariampuzha/flywheel-gear-dev-mcp.git
 cd flywheel-gear-dev-mcp
-
-# Install dependencies with uv
 uv sync
 
-# Or with pip (after creating a virtual environment)
-pip install -e .
+# 2. Navigate to your gear project
+cd /path/to/your/gear-project
+
+# 3. Add the MCP server
+claude mcp add flywheel-gear-dev \
+  --scope local \
+  -- uv run --directory /full/path/to/flywheel-gear-dev-mcp flywheel-gear-mcp
+
+# 4. Start Claude Code and ask:
+# "Show me the gear manifest schema requirements"
 ```
 
-## Configuration for Claude Code
+## Configuration
 
-### Option 1: Using the CLI (Recommended)
+Two ways to configure the server in your gear project:
 
-Add the MCP server using the `claude mcp add` command:
+### Option 1: CLI (Recommended)
+
+From your gear project directory:
 
 ```bash
 claude mcp add flywheel-gear-dev \
@@ -37,42 +48,26 @@ claude mcp add flywheel-gear-dev \
   -- uv run --directory /absolute/path/to/flywheel-gear-dev-mcp flywheel-gear-mcp
 ```
 
-Replace `/absolute/path/to/flywheel-gear-dev-mcp` with the actual path to this project.
+### Option 2: .mcp.json file
 
-### Option 2: Using .mcp.json
-
-Create or edit `.mcp.json` in your project directory:
+Create `.mcp.json` in your gear project:
 
 ```json
 {
   "mcpServers": {
     "flywheel-gear-dev": {
       "command": "uv",
-      "args": ["run", "flywheel-gear-mcp"]
+      "args": ["run", "--directory", "/absolute/path/to/flywheel-gear-dev-mcp", "flywheel-gear-mcp"]
     }
   }
 }
 ```
 
-This will make the MCP server available when working in this project directory.
-
 ## Usage
 
 ### Starting the server
 
-The server is automatically started by Claude Code when you launch a session. No manual start needed!
-
-### Testing the server manually
-
-To verify the server works before configuring it with Claude Code:
-
-```bash
-# Run the server (will start and wait for MCP messages)
-uv run flywheel-gear-mcp
-
-# Run with verbose logging
-uv run flywheel-gear-mcp --verbose
-```
+The server is automatically started by Claude Code when you launch a session. 
 
 ### Using the tools in Claude Code
 
@@ -84,6 +79,10 @@ Once configured, you can ask Claude to use the documentation tools:
 "What are the gear manifest schema requirements?"
 ```
 
+## Features
+- **Fresh documentation on startup**: Fetches latest docs every time the server starts
+- **10 curated documentation sources**: Flywheel gear libraries, APIs, DICOM standard, and guides that you can add/remove/edit in [config](config.yaml)
+- **Deprecation filtering**: Automatically removes deprecated content to keep LLMs focused on current APIs
 ### Available tools
 
 - `get_fw_gear_docs` - fw-gear library documentation
@@ -98,7 +97,7 @@ Once configured, you can ask Claude to use the documentation tools:
 - `get_manifest_schema` - Gear manifest JSON schema
 - `list_available_docs` - List all cached documentation sources
 
-## Customizing documentation sources
+### Customizing documentation sources
 
 Edit `config.yaml` to add, remove, or modify documentation sources:
 
@@ -120,14 +119,23 @@ documentation_sources:
 - `json` - JSON schemas
 - `gitlab_repo` - GitLab repository markdown files
 
+## How It Works
+
+1. **One-time setup**: Install the MCP server code once, configure it in your gear projects
+2. **Automatic startup**: When you run `claude` in your gear project, Claude Code automatically starts this MCP server in the background
+3. **On-demand docs**: When Claude needs Flywheel documentation, it calls this server via MCP protocol
+4. **Fresh data**: The server fetches latest docs from URLs on first request, caches them for the session
+5. **Automatic shutdown**: Server stops when you exit Claude Code
+
+The server runs locally—no data leaves your machine.
+
 ## Troubleshooting
 
 ### Server won't start
 
-1. **Check config path**: Ensure `cwd` in your MCP config points to the directory with `config.yaml`
-2. **Check Python version**: Requires Python 3.13+
-3. **Check dependencies**: Run `uv sync` again
-4. **Check log files**: Review `logs/flywheel-gear-mcp.log` for detailed error messages
+1. **Check Python version**: Requires Python 3.13+
+2. **Check dependencies**: Run `uv sync` again
+3. **Check log files**: Review `logs/flywheel-gear-mcp.log` for detailed error messages
 
 ### Documentation not loading
 
