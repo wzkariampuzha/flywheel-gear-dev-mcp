@@ -92,26 +92,33 @@ async def _fetch_source(source: dict[str, Any]) -> dict[str, Any]:
     contents = []
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
         for url in urls:
-            content = await _fetch_with_retry(client, url)
+            content = await _fetch_with_retry(client, url, doc_type)
             if content:
-                contents.append(content)
+                contents.append((content, url))
 
     if not contents:
         raise ValueError(f"No content fetched for {tool_name}")
 
     # Parse based on type
     parsed_contents = []
-    for content in contents:
+    for content, url in contents:
         if doc_type == "html":
-            parsed = parsers.parse_html(content, urls[0], strip_deprecated)
+            parsed = parsers.parse_html(content, url, strip_deprecated)
         elif doc_type == "xml":
             parsed = parsers.parse_xml(content, filter_sections)
         elif doc_type == "json":
             parsed = parsers.parse_json_schema(content)
         elif doc_type == "gitlab_repo":
             parsed = parsers.parse_gitlab_repo(content, strip_deprecated)
+        elif doc_type == "pdf":
+            parsed = parsers.parse_pdf(content, url, strip_deprecated)
         else:
-            parsed = content  # Unknown type, store as-is
+            # Unknown type, convert bytes to string if needed
+            parsed = (
+                content
+                if isinstance(content, str)
+                else content.decode("utf-8", errors="replace")
+            )
 
         parsed_contents.append(parsed)
 
@@ -129,23 +136,28 @@ async def _fetch_source(source: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _fetch_with_retry(
-    client: httpx.AsyncClient, url: str, max_retries: int = 3
-) -> str | None:
+    client: httpx.AsyncClient, url: str, doc_type: str = "html", max_retries: int = 3
+) -> str | bytes | None:
     """Fetch URL with exponential backoff retry.
 
     Args:
         client: httpx AsyncClient
         url: URL to fetch
+        doc_type: Type of document ('pdf' returns bytes, others return string)
         max_retries: Maximum number of retry attempts
 
     Returns:
-        Content as string, or None if all retries failed
+        Content as string or bytes (for PDF), or None if all retries failed
     """
     for attempt in range(max_retries):
         try:
             logger.debug(f"Fetching {url} (attempt {attempt + 1}/{max_retries})")
             response = await client.get(url)
             response.raise_for_status()
+
+            # Return bytes for PDFs, text for everything else
+            if doc_type == "pdf":
+                return response.content
             return response.text
 
         except httpx.HTTPStatusError as e:

@@ -50,18 +50,7 @@ claude mcp add flywheel-gear-dev \
 
 ### Option 2: .mcp.json file
 
-Create `.mcp.json` in your gear project:
-
-```json
-{
-  "mcpServers": {
-    "flywheel-gear-dev": {
-      "command": "uv",
-      "args": ["run", "--directory", "/absolute/path/to/flywheel-gear-dev-mcp", "flywheel-gear-mcp"]
-    }
-  }
-}
-```
+Create or move the existing [`.mcp.json`](.mcp.json) into your gear project:
 
 ## Usage
 
@@ -81,7 +70,7 @@ Once configured, you can ask Claude to use the documentation tools:
 
 ## Features
 - **Fresh documentation on startup**: Fetches latest docs every time the server starts
-- **10 curated documentation sources**: Flywheel gear libraries, APIs, DICOM standard, and guides that you can add/remove/edit in [config](config.yaml)
+- **11 curated documentation sources**: Flywheel gear libraries, APIs, DICOM standard, BIDS specification, and guides that you can add/remove/edit in [config](config.yaml)
 - **Deprecation filtering**: Automatically removes deprecated content to keep LLMs focused on current APIs
 ### Available tools
 
@@ -92,6 +81,7 @@ Once configured, you can ask Claude to use the documentation tools:
 - `get_dicom_standard` - DICOM standard (filtered to data dictionary and transfer syntaxes)
 - `get_file_types_guide` - Flywheel file types guide
 - `get_bids_guide` - BIDS in Flywheel guide
+- `get_bids_specification` - Complete BIDS specification (PDF)
 - `get_batch_gears_guide` - Batch gear execution guide
 - `get_gear_specs` - Gear specifications
 - `get_manifest_schema` - Gear manifest JSON schema
@@ -108,7 +98,7 @@ documentation_sources:
     description: "Description here"
     urls:
       - https://example.com/docs
-    type: html  # or xml, json, gitlab_repo
+    type: html  # or xml, json, pdf, gitlab_repo
     strip_deprecated: true
 ```
 
@@ -117,6 +107,7 @@ documentation_sources:
 - `html` - HTML documentation (auto-converts to markdown)
 - `xml` - XML documentation (for DICOM standard)
 - `json` - JSON schemas
+- `pdf` - PDF documents (extracts text page by page)
 - `gitlab_repo` - GitLab repository markdown files
 
 ## How It Works

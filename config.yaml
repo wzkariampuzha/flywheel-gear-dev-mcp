@@ -7,7 +7,7 @@
 #   - tool_name: The name of the MCP tool (e.g., "get_fw_gear_docs")
 #   - display_name: Human-readable name shown in responses
 #   - urls: List of URLs to fetch (can combine multiple sources)
-#   - type: Content type - "html", "xml", "json", or "gitlab_repo"
+#   - type: Content type - "html", "xml", "json", "pdf", or "gitlab_repo"
 #   - strip_deprecated: Whether to remove deprecated sections (default: true)
 #   - filter_sections: (Optional) For XML/large docs, specific sections to extract
 
@@ -71,6 +71,14 @@ documentation_sources:
       - https://docs.flywheel.io/Developer_Guides/bids/#introduction
     type: html
     strip_deprecated: true
+
+  - tool_name: get_bids_specification
+    display_name: "BIDS Specification"
+    description: "Complete BIDS (Brain Imaging Data Structure) specification PDF"
+    urls:
+      - https://github.com/bids-standard/bids-specification-pdf-releases/raw/main/bids-spec.pdf
+    type: pdf
+    strip_deprecated: false
 
   - tool_name: get_batch_gears_guide
     display_name: "Batch Gear Execution Guide"

@@ -1,5 +1,6 @@
 """Documentation parsers for different content types."""
 
+import io
 import json
 import re
 from typing import Optional
@@ -7,6 +8,7 @@ from typing import Optional
 from bs4 import BeautifulSoup
 from lxml import etree
 from markdownify import markdownify as md
+from pypdf import PdfReader
 
 
 def parse_html(content: str, url: str, strip_deprecated: bool = True) -> str:
@@ -157,6 +159,51 @@ def parse_gitlab_repo(content: str, strip_deprecated: bool = True) -> str:
     return parse_html(content, "", strip_deprecated)
 
 
+def parse_pdf(content: bytes, url: str, strip_deprecated: bool = True) -> str:
+    """Parse PDF content and extract text as markdown.
+
+    Args:
+        content: Raw PDF binary content
+        url: Source URL (for context)
+        strip_deprecated: Whether to remove deprecated sections
+
+    Returns:
+        Extracted text formatted as markdown
+    """
+    try:
+        # Create a PDF reader from bytes
+        pdf_file = io.BytesIO(content)
+        reader = PdfReader(pdf_file)
+
+        output_lines = []
+        output_lines.append(f"# PDF Documentation from {url}\n")
+        output_lines.append(f"**Total Pages:** {len(reader.pages)}\n")
+        output_lines.append("---\n")
+
+        # Extract text from each page
+        for page_num, page in enumerate(reader.pages, start=1):
+            text = page.extract_text()
+            if text.strip():  # Only add non-empty pages
+                output_lines.append(f"## Page {page_num}\n")
+                output_lines.append(text)
+                output_lines.append("\n---\n")
+
+        markdown = "\n".join(output_lines)
+
+        # Remove deprecated sections if requested
+        if strip_deprecated:
+            markdown = _remove_deprecated_from_text(markdown)
+
+        # Clean up excessive whitespace
+        markdown = re.sub(r"\n\s*\n\s*\n+", "\n\n", markdown)
+        markdown = markdown.strip()
+
+        return markdown
+
+    except Exception as e:
+        return f"# Error Parsing PDF\n\nFailed to parse PDF from {url}: {e}"
+
+
 # Helper functions
 
 
@@ -279,3 +326,51 @@ def _extract_dicom_transfer_syntaxes(root) -> list[str]:
         )
 
     return output
+
+
+def _remove_deprecated_from_text(text: str) -> str:
+    """Remove sections marked as deprecated from plain text/markdown.
+
+    Args:
+        text: Plain text or markdown content
+
+    Returns:
+        Text with deprecated sections removed
+    """
+    deprecated_patterns = [
+        re.compile(r"deprecat", re.IGNORECASE),
+        re.compile(r"legacy", re.IGNORECASE),
+        re.compile(r"obsolete", re.IGNORECASE),
+    ]
+
+    lines = text.split("\n")
+    output_lines = []
+    skip_section = False
+    current_heading_level = 0
+
+    for line in lines:
+        # Check if this is a markdown heading
+        heading_match = re.match(r"^(#{1,6})\s+(.+)", line)
+
+        if heading_match:
+            level = len(heading_match.group(1))
+            heading_text = heading_match.group(2)
+
+            # Check if this heading contains deprecated markers
+            is_deprecated = any(
+                pattern.search(heading_text) for pattern in deprecated_patterns
+            )
+
+            if is_deprecated:
+                skip_section = True
+                current_heading_level = level
+                continue
+            elif skip_section and level <= current_heading_level:
+                # We've reached a new section at same or higher level, stop skipping
+                skip_section = False
+                current_heading_level = 0
+
+        if not skip_section:
+            output_lines.append(line)
+
+    return "\n".join(output_lines)
