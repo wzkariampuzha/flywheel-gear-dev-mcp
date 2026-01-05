@@ -1,27 +1,21 @@
 # Flywheel Gear Development MCP Server
 
-An MCP (Model Context Protocol) server that provides fresh Flywheel documentation for gear development. Designed for use with Claude Code CLI.
+An MCP (Model Context Protocol) server that provides fresh Flywheel documentation for gear development. Designed for use with Claude Code CLI or possibly other LLMs (haven't tested them there yet).
 
 ## Features
-
 - **Fresh documentation on startup**: Fetches latest docs every time the server starts
-- **10 curated documentation sources**: Flywheel gear libraries, APIs, DICOM standard, and guides
-- **Deprecation filtering**: Automatically removes deprecated content to keep Claude focused on current APIs
-- **Easy configuration**: Add/remove documentation sources via `config.yaml`
-- **Parallel fetching**: Fast startup with async parallel downloads
-- **Smart parsing**: Converts HTML/XML/JSON to clean markdown
+- **10 curated documentation sources**: Flywheel gear libraries, APIs, DICOM standard, and guides that you can add/remove/edit in [config](config.yaml)
+- **Deprecation filtering**: Automatically removes deprecated content to keep LLMs focused on current APIs
 
 ## Installation
-
 ### Prerequisites
-
-- Python 3.13+
-- [uv](https://github.com/astral-sh/uv) or pip
+- [uv](https://github.com/astral-sh/uv) or pip (Python 3.13+)
 
 ### Install from source
 
 ```bash
 # Clone the repository
+
 cd flywheel-gear-dev-mcp
 
 # Install dependencies with uv
@@ -80,17 +74,6 @@ uv run flywheel-gear-mcp
 uv run flywheel-gear-mcp --verbose
 ```
 
-### Logging
-
-The server creates both console and file logs:
-
-- **Console**: INFO level by default, DEBUG with `--verbose` flag
-- **File logs**: Written to `logs/flywheel-gear-mcp.log` (always DEBUG level)
-- **Rotation**: 10MB max per file, 5 backup files kept
-- **Location**: `logs/` directory in your current working directory
-
-The `logs/` directory is automatically created on first run and is excluded from git via `.gitignore`.
-
 ### Using the tools in Claude Code
 
 Once configured, you can ask Claude to use the documentation tools:
@@ -137,10 +120,6 @@ documentation_sources:
 - `json` - JSON schemas
 - `gitlab_repo` - GitLab repository markdown files
 
-### Refresh documentation
-
-To fetch fresh documentation, simply restart the MCP server by restarting Claude Code.
-
 ## Troubleshooting
 
 ### Server won't start
@@ -162,41 +141,5 @@ To fetch fresh documentation, simply restart the MCP server by restarting Claude
 2. **Check config.json syntax**: Ensure valid JSON
 3. **Check server status**: Look for MCP server errors in Claude Code logs
 
-## Development
-
-### Project structure
-
-```
-flywheel-gear-dev-mcp/
-├── src/flywheel_gear_mcp/
-│   ├── __init__.py
-│   ├── server.py       # MCP server entry point
-│   ├── fetcher.py      # Async HTTP fetching and caching
-│   ├── parsers.py      # HTML/XML/JSON parsing
-│   └── tools.py        # Dynamic tool generation
-├── config.yaml         # Documentation sources (user-editable)
-├── pyproject.toml      # Dependencies and metadata
-└── README.md
-```
-
-### Running tests
-
-```bash
-# Run with verbose logging
-flywheel-gear-mcp --verbose
-```
-
-### Adding new documentation sources
-
-1. Edit `config.yaml`
-2. Add a new entry to `documentation_sources`
-3. Restart the server
-4. The tool will be automatically available!
-
-## License
-
-MIT
-
 ## Contributing
-
 Contributions welcome! Please open an issue or PR.
